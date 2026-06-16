@@ -16,8 +16,7 @@ MEMORY_GAUGE = Gauge('portfolio_memory_usage_percent', 'Current Memory Usage Per
 cpu_stress_active = False
 
 def stress_cpu():
-    global cpu_stress_active
-    # Intense math loop to peg CPU usage high for 60 seconds
+    # REMOVED: global cpu_stress_active (Not needed just to read the variable)
     timeout = time.time() + 60
     while time.time() < timeout and cpu_stress_active:
         _ = 10000 * 10000
@@ -26,7 +25,6 @@ def stress_cpu():
 def home():
     REQUEST_COUNT.inc()
     
-    # HTML template embedded directly for simplicity
     html_content = """
     <!DOCTYPE html>
     <html lang="en">
@@ -92,7 +90,7 @@ def home():
 
 @app.route('/simulate-crash', methods=['POST'])
 def simulate_crash():
-    global cpu_stress_active
+    global cpu_stress_active  # Kept here because we actually modify it down below
     if not cpu_stress_active:
         cpu_stress_active = True
         t = threading.Thread(target=stress_cpu)
@@ -101,12 +99,10 @@ def simulate_crash():
 
 @app.route('/metrics')
 def metrics():
-    # Update system utilization metrics dynamically on scrape
     CPU_GAUGE.set(psutil.cpu_percent())
     MEMORY_GAUGE.set(psutil.virtual_memory().percent)
     return generate_latest(REGISTRY), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 if __name__ == '__main__':
-    # Render binds port to the PORT environment variable
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
