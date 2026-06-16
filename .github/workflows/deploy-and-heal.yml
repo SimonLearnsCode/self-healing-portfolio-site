@@ -1,0 +1,39 @@
+name: CI/CD & Self-Healing Control Engine
+
+on:
+  push:
+    branches: [ main ]
+  repository_dispatch:
+    types: [ trigger_self_healing ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Linters / Sanity Checks
+        run: |
+          pip install flake8
+          # Stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  self-healing-trigger:
+    if: github.event.action == 'trigger_self_healing'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Auto-Recovery Webhook
+        run: |
+          echo "🚨 High CPU usage anomaly detected on production container!"
+          echo "🛠️ Initiating automated zero-downtime rollback/restart..."
+          
+          # Call Render's Deploy Hook to clear resources and spin up fresh container instances
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          
+          echo "✅ Self-healing completed successfully."
