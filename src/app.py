@@ -16,23 +16,24 @@ MEMORY_GAUGE = Gauge('portfolio_memory_usage_percent', 'Current Memory Usage Per
 cpu_stress_active = False
 traffic_stress_active = False
 
+
 def stress_cpu():
-    global cpu_stress_active
     timeout = time.time() + 45  # Keep spike alive for 45 seconds
     while time.time() < timeout and cpu_stress_active:
         _ = 10000 * 10000
 
+
 def stress_traffic():
-    global traffic_stress_active
     timeout = time.time() + 45
     while time.time() < timeout and traffic_stress_active:
         REQUEST_COUNT.inc(15)  # Increment visits aggressively
         time.sleep(0.1)        # 150 visits per second simulation
 
+
 @app.route('/')
 def home():
     REQUEST_COUNT.inc()
-    
+
     html_content = """
     <!DOCTYPE html>
     <html lang="en">
@@ -66,7 +67,7 @@ def home():
             <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
                 <div class="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex items-center justify-between">
                     <h2 class="text-lg font-bold flex items-center gap-2 text-indigo-400">
-                        <i class="fa-solid var(--fa-terminal) text-sm"></i> 🛠️ Live Site Reliability Engineering (SRE) Sandbox
+                        <i class="fa-solid fa-terminal text-sm"></i> 🛠️ Live Site Reliability Engineering (SRE) Sandbox
                     </h2>
                     <span class="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Target: Production-Node-01</span>
                 </div>
@@ -152,27 +153,30 @@ def home():
     """
     return render_template_string(html_content)
 
+
 @app.route('/simulate-chaos/<chaos_type>', methods=['POST'])
 def simulate_chaos(chaos_type):
     global cpu_stress_active, traffic_stress_active
-    
+
     if chaos_type == 'cpu' and not cpu_stress_active:
         cpu_stress_active = True
         threading.Thread(target=stress_cpu).start()
-        return jsonify({"status": "success", "message": "CPU stress thread spawned."})
-        
+        return jsonify({"status": "success", "message": "CPU thread spawned."})
+
     elif chaos_type == 'traffic' and not traffic_stress_active:
         traffic_stress_active = True
         threading.Thread(target=stress_traffic).start()
-        return jsonify({"status": "success", "message": "Synthetic request influx active."})
-        
-    return jsonify({"status": "ignored", "message": "Simulation already running or invalid type."})
+        return jsonify({"status": "success", "message": "Traffic flood active."})
+
+    return jsonify({"status": "ignored", "message": "Already active."})
+
 
 @app.route('/metrics')
 def metrics():
     CPU_GAUGE.set(psutil.cpu_percent())
     MEMORY_GAUGE.set(psutil.virtual_memory().percent)
-    return generate_latest(REGISTRY), 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    return generate_latest(REGISTRY), 200, {'Content-Type': 'text/plain'}
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
