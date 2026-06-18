@@ -7,32 +7,32 @@ import threading
 
 app = Flask(__name__)
 
-# Prometheus Metrics
+# Prometheus Metrics (Our background system counters)
 REQUEST_COUNT = Counter('portfolio_requests_total', 'Total Web Visits')
 CPU_GAUGE = Gauge('portfolio_cpu_usage_percent', 'Current CPU Usage Percent')
 MEMORY_GAUGE = Gauge('portfolio_memory_usage_percent', 'Current Memory Usage Percent')
 
-# Chaos states
+# Simple tracking flags for our background tasks
 cpu_stress_active = False
 traffic_stress_active = False
 
 
 def stress_cpu():
-    timeout = time.time() + 45  # Keep spike alive for 45 seconds
+    timeout = time.time() + 45  # Run for 45 seconds max
     while time.time() < timeout and cpu_stress_active:
-        _ = 10000 * 10000
+        _ = 10000 * 10000  # Make the computer calculate numbers rapidly
 
 
 def stress_traffic():
     timeout = time.time() + 45
-    while time.time() < timeout and traffic_stress_active:
-        REQUEST_COUNT.inc(15)  # Increment visits aggressively
-        time.sleep(0.1)        # 150 visits per second simulation
+    while time.time() < timeout and traffic_traffic_active:
+        REQUEST_COUNT.inc(15)  # Simulate 15 hits at once
+        time.sleep(0.1)        # Pause for a split second
 
 
 @app.route('/')
 def home():
-    REQUEST_COUNT.inc()
+    REQUEST_COUNT.inc()  # Log a normal visit
 
     html_content = """
     <!DOCTYPE html>
@@ -40,111 +40,109 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>SRE & DevOps Cloud Cockpit</title>
+        <title>Cloud Auto-Heal Lab</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     </head>
-    <body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+    <body class="bg-slate-950 text-slate-100 font-sans antialiased">
         
-        <div class="bg-gradient-to-r from-indigo-900 via-slate-900 to-blue-900 border-b border-slate-800 px-6 py-4 shadow-2xl">
-            <div class="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">Simon Learns Code</h1>
-                    <p class="text-xs font-mono text-slate-400 mt-1">🚀 Systems Administrator & DevOps Architect</p>
-                </div>
-                <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-lg border border-slate-700/50">
-                    <span class="relative flex h-3 w-3">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    <span class="text-xs font-mono font-bold tracking-wider text-emerald-400 uppercase">System: Operational</span>
-                </div>
-            </div>
+        <div class="max-w-4xl mx-auto pt-12 px-4 text-center">
+            <span class="text-xs font-mono tracking-widest text-indigo-400 uppercase bg-indigo-950/50 px-3 py-1 rounded-full border border-indigo-800/40">
+                Interactive Cloud Experiment
+            </span>
+            <h1 class="text-4xl font-black tracking-tight mt-3 bg-gradient-to-r from-slate-100 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
+                The Self-Healing Infrastructure Lab
+            </h1>
+            <p class="text-sm text-slate-400 mt-2 max-w-xl mx-auto">
+                Designed by Simon Motaung. A hands-on demonstration showing how modern cloud networks automatically detect faults and repair themselves without human intervention.
+            </p>
         </div>
 
-        <main class="max-w-5xl mx-auto px-4 py-12 space-y-12">
+        <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
             
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-                <div class="border-b border-slate-800 bg-slate-900/50 px-6 py-4 flex items-center justify-between">
-                    <h2 class="text-lg font-bold flex items-center gap-2 text-indigo-400">
-                        <i class="fa-solid fa-terminal text-sm"></i> 🛠️ Live Site Reliability Engineering (SRE) Sandbox
-                    </h2>
-                    <span class="text-xs font-mono text-slate-500 bg-slate-950 px-2 py-1 rounded">Target: Production-Node-01</span>
-                </div>
-                
-                <div class="p-6 space-y-6">
-                    <p class="text-slate-300 text-sm max-w-3xl leading-relaxed">
-                        Welcome, Recruiter! Instead of reading a static resume, you have access to my infrastructure's control plane. Use the triggers below to launch synthetic anomalies and watch how my automated monitoring matrix auto-heals this node.
-                    </p>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 hover:border-red-500/30 transition-all duration-300 flex flex-col justify-between">
-                            <div>
-                                <div class="text-red-400 text-xl mb-2"><i class="fa-solid fa-microchip"></i></div>
-                                <h3 class="font-bold text-slate-200">Inject CPU Anomaly</h3>
-                                <p class="text-xs text-slate-400 mt-1 mb-4">Forces calculation thread blocks to drive kernel metrics over 80% utilization limits, tripping Prometheus alerting thresholds.</p>
-                            </div>
-                            <button onclick="triggerChaos('cpu')" id="cpuBtn" class="w-full bg-red-950/40 hover:bg-red-600 border border-red-800 hover:border-red-500 text-red-200 hover:text-white font-mono font-medium py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg shadow-red-950/20">
-                                Launch Stress Matrix
-                            </button>
-                        </div>
-
-                        <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 hover:border-cyan-500/30 transition-all duration-300 flex flex-col justify-between">
-                            <div>
-                                <div class="text-cyan-400 text-xl mb-2"><i class="fa-solid fa-chart-line"></i></div>
-                                <h3 class="font-bold text-slate-200">Simulate DDoS Traffic Surge</h3>
-                                <p class="text-xs text-slate-400 mt-1 mb-4">Mocks a distributed flood of concurrent visitors, driving telemetry count parameters upwards at 150 requests/sec.</p>
-                            </div>
-                            <button onclick="triggerChaos('traffic')" id="trafficBtn" class="w-full bg-cyan-950/40 hover:bg-cyan-600 border border-cyan-800 hover:border-cyan-500 text-cyan-200 hover:text-white font-mono font-medium py-2.5 px-4 rounded-lg transition-all duration-300 shadow-lg shadow-cyan-950/20">
-                                Simulate 15k Reqs/Min
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="statusConsole" class="hidden bg-slate-950 border border-amber-500/20 rounded-xl p-5 font-mono text-xs space-y-2 text-amber-400 shadow-inner">
-                        <div class="flex items-center gap-2 text-sm font-bold text-amber-300">
-                            <i class="fa-solid fa-triangle-exclamation animate-pulse"></i> SIMULATION INJECTED & ACTIVE
-                        </div>
-                        <hr class="border-slate-800 my-2">
-                        <p class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> [TELEMETRY] Scrape metrics route exposed at <a href="/metrics" target="_blank" class="underline text-blue-400 hover:text-blue-300">/metrics</a></p>
-                        <p class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span> [ALERTMANAGER] Evaluating metric thresholds across instances...</p>
-                        <p id="healLog" class="text-slate-500 transition-all duration-500">[SYSTEM] Listening for automated GitHub recovery dispatch action...</p>
-                    </div>
-                </div>
+            <div class="bg-slate-900/60 p-5 rounded-xl border border-slate-800/80 text-xs text-slate-300 leading-relaxed space-y-2 shadow-xl">
+                <p class="font-bold text-slate-200 text-sm">💡 How this experiment works (In plain terms):</p>
+                <p>When software runs in production, servers can slow down or crash due to unexpected traffic floods or heavy calculations. Usually, an engineer gets woken up at 2 AM to fix it. Here, my cloud platform uses automated monitoring to watch the server's pulse. If you break it using the buttons below, the system will detect the issue and issue an automatic system restart command instantly.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-3 shadow-lg">
-                    <h3 class="text-base font-bold text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-layer-group"></i> Container Stack Details</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">Built using a lightweight multi-stage Docker file on top of Python-Alpine distributions. Exposes native counters explicitly mapped for Prometheus collectors.</p>
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
+                <div class="text-center space-y-1">
+                    <h2 class="text-lg font-bold text-slate-200">Step 1: Choose Your Weapon</h2>
+                    <p class="text-xs text-slate-400">Click a button below to actively inject a system fault into this live website.</p>
                 </div>
-                <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 space-y-3 shadow-lg">
-                    <h3 class="text-base font-bold text-indigo-400 flex items-center gap-2"><i class="fa-solid fa-heart-pulse"></i> Auto-Recovery Infrastructure</h3>
-                    <p class="text-slate-400 text-xs leading-relaxed">UptimeRobot hooks evaluate conditions every 5 seconds. Exceeding thresholds automatically sends a payload to GitHub Actions API to trigger an instant application container rollout.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onclick="startExperiment('cpu')" id="cpuBtn" class="group relative bg-gradient-to-b from-slate-900 to-slate-950 hover:from-red-950/30 hover:to-slate-950 p-5 rounded-xl border border-slate-800 hover:border-red-500/50 text-left transition-all duration-300 shadow-lg">
+                        <div class="text-red-400 text-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-microchip"></i></div>
+                        <h3 class="font-bold text-slate-200 text-sm mt-2">Overload the CPU Processor</h3>
+                        <p class="text-[11px] text-slate-400 mt-1">Forces the server to calculate massive mathematical formulas, pushing utilization to 100% instantly.</p>
+                    </button>
+
+                    <button onclick="startExperiment('traffic')" id="trafficBtn" class="group relative bg-gradient-to-b from-slate-900 to-slate-950 hover:from-cyan-950/30 hover:to-slate-950 p-5 rounded-xl border border-slate-800 hover:border-cyan-500/50 text-left transition-all duration-300 shadow-lg">
+                        <div class="text-cyan-400 text-lg group-hover:scale-110 transition-transform"><i class="fa-solid fa-bolt"></i></div>
+                        <h3 class="font-bold text-slate-200 text-sm mt-2">Simulate Fake Traffic Surge</h3>
+                        <p class="text-[11px] text-slate-400 mt-1">Simulates 15,000 automated bots visiting this exact webpage at the exact same moment.</p>
+                    </button>
+                </div>
+
+                <div id="trackerMap" class="hidden border-t border-slate-800/80 pt-6 space-y-4">
+                    <p class="text-center text-xs font-mono tracking-wider text-amber-400 font-bold animate-pulse">
+                        ⚠️ LIVE FAULT INJECTED. AUTOMATED AUTOMATION SEQUENCE INITIALIZED:
+                    </p>
+
+                    <div class="grid grid-cols-3 gap-2 font-mono text-[10px] text-center">
+                        <div id="step1" class="bg-slate-950 border border-slate-800 p-3 rounded-lg text-slate-500 transition-all duration-500">
+                            <div class="text-sm font-bold mb-1">01</div>
+                            <span class="font-bold">FAULT DETECTED</span>
+                            <p class="text-[9px] text-slate-600 mt-1">System parameters broke safety guidelines.</p>
+                        </div>
+                        <div id="step2" class="bg-slate-950 border border-slate-800 p-3 rounded-lg text-slate-500 transition-all duration-500">
+                            <div class="text-sm font-bold mb-1">02</div>
+                            <span class="font-bold">TRIGGER ALERT</span>
+                            <p class="text-[9px] text-slate-600 mt-1">Monitoring tools fired recovery webhook flags.</p>
+                        </div>
+                        <div id="step3" class="bg-slate-950 border border-slate-800 p-3 rounded-lg text-slate-500 transition-all duration-500">
+                            <div class="text-sm font-bold mb-1">03</div>
+                            <span class="font-bold">SELF-HEAL COMPLETE</span>
+                            <p class="text-[9px] text-slate-600 mt-1">Fresh server container deployed live.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
 
         <script>
-            function triggerChaos(type) {
-                const btn = type === 'cpu' ? document.getElementById('cpuBtn') : document.getElementById('trafficBtn');
-                const consoleBox = document.getElementById('statusConsole');
-                const healLog = document.getElementById('healLog');
+            function startExperiment(faultType) {
+                // Show the visual stepper track map
+                document.getElementById('trackerMap').classList.remove('hidden');
                 
-                consoleBox.classList.remove('hidden');
-                btn.disabled = true;
-                btn.className = "w-full bg-slate-900 border border-slate-800 text-slate-600 font-mono font-medium py-2.5 px-4 rounded-lg cursor-not-allowed text-xs";
-                btn.innerHTML = "Simulation Running...";
+                // Disable both action triggers to keep state clean
+                document.getElementById('cpuBtn').disabled = true;
+                document.getElementById('trafficBtn').disabled = true;
+                document.getElementById('cpuBtn').classList.add('opacity-40', 'cursor-not-allowed');
+                document.getElementById('trafficBtn').classList.add('opacity-40', 'cursor-not-allowed');
 
-                fetch('/simulate-chaos/' + type, { method: 'POST' })
+                // Step 1 Lights up instantly
+                const s1 = document.getElementById('step1');
+                s1.className = "bg-red-950/20 border-red-500/60 p-3 rounded-lg text-red-400 transition-all duration-500 shadow-md shadow-red-900/10";
+
+                // Send the network signal to the python app back-end
+                fetch('/simulate-chaos/' + faultType, { method: 'POST' })
                     .then(response => response.json())
                     .then(data => {
                         console.log(data);
+                        
+                        // Step 2 lights up 3.5 seconds later (Simulating metric evaluation time)
                         setTimeout(() => {
-                            healLog.classList.remove('text-slate-500');
-                            healLog.classList.add('text-rose-400', 'font-bold');
-                            healLog.innerHTML = "🚨 [ALERT] Threshold Breached! Action webhook sent to GitHub Core Workflow.";
-                        }, 4000);
+                            const s2 = document.getElementById('step2');
+                            s2.className = "bg-amber-950/20 border-amber-500/60 p-3 rounded-lg text-amber-400 transition-all duration-500 shadow-md shadow-amber-900/10";
+                        }, 3500);
+
+                        // Step 3 lights up 7 seconds later (Simulating GitHub Actions workflow catch-up)
+                        setTimeout(() => {
+                            const s3 = document.getElementById('step3');
+                            s3.className = "bg-emerald-950/20 border-emerald-500/60 p-3 rounded-lg text-emerald-400 transition-all duration-500 shadow-md shadow-emerald-900/10";
+                        }, 7000);
                     });
             }
         </script>
@@ -161,12 +159,12 @@ def simulate_chaos(chaos_type):
     if chaos_type == 'cpu' and not cpu_stress_active:
         cpu_stress_active = True
         threading.Thread(target=stress_cpu).start()
-        return jsonify({"status": "success", "message": "CPU thread spawned."})
+        return jsonify({"status": "success", "message": "CPU load running."})
 
     elif chaos_type == 'traffic' and not traffic_stress_active:
         traffic_stress_active = True
         threading.Thread(target=stress_traffic).start()
-        return jsonify({"status": "success", "message": "Traffic flood active."})
+        return jsonify({"status": "success", "message": "Traffic flood running."})
 
     return jsonify({"status": "ignored", "message": "Already active."})
 
