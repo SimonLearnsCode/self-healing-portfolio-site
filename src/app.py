@@ -168,7 +168,7 @@ def simulate_chaos(chaos_type):
 
     return jsonify({"status": "ignored", "message": "Already active."})
 
-
+sssds
 @app.route('/metrics')
 def metrics():
     CPU_GAUGE.set(psutil.cpu_percent())
